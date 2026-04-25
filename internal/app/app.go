@@ -173,12 +173,10 @@ func (a *app) autoSendNews(news []domain.News, subs []domain.Subs) {
 	}
 
 	for _, s := range subs {
-		go func() {
-			for _, n := range news {
-				if err := a.tgAPI.SendTelegramNews(s.ChatID, &n); err != nil {
-					log.Printf("failed send %s to %s: %v", n.Title, s.Username, err)
-				}
+		for _, n := range news {
+			if err := a.tgAPI.SendTelegramNews(s.ChatID, &n); err != nil {
+				log.Printf("failed send %s to %s: %v", n.Title, s.Username, err)
 			}
-		}()
+		}
 	}
 }
