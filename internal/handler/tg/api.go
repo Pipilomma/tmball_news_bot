@@ -15,11 +15,6 @@ import (
 type CommandHandler func(*tgbotapi.Message)
 type CallbackHandler func(*tgbotapi.CallbackQuery)
 
-// type Formatter interface {
-// 	FormatTrainingLogs(sessions []domain.TrainingSession) string
-// 	FormatLastSets(sessions []entity.ExerciseProgression) string
-// }
-
 type Service interface {
 	ParseTmball(ctx context.Context) ([]domain.News, []domain.Subs, error)
 	LastNews(ctx context.Context) (*domain.News, error)
