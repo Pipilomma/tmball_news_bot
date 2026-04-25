@@ -1,0 +1,61 @@
+version: '3'
+
+# Глобальные переменные проекта
+vars:
+  GO_VERSION: '1.24'
+  GOLANGCI_LINT_VERSION: 'v2.1.5'
+  
+  BIN_DIR: '{{.ROOT_DIR}}/bin'
+  GOLANGCI_LINT: '{{.BIN_DIR}}/golangci-lint'
+  GOOSE: '{{.BIN_DIR}}/goose'
+ 
+
+tasks:
+  install-golangci-lint:
+    desc: "Устанавливает golangci-lint в каталог bin"
+    cmds:
+      - |
+        [ -f {{.GOLANGCI_LINT}} ] || {
+          mkdir -p {{.BIN_DIR}}
+          echo "📦 Устанавливаем golangci-lint {{.GOLANGCI_LINT_VERSION}}..."
+          GOBIN={{.BIN_DIR}} go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@{{.GOLANGCI_LINT_VERSION}}
+        }
+    status:
+      - test -x {{.GOLANGCI_LINT}}
+
+  lint:
+    desc: "Запускает golangci-lint для всех модулей"
+    deps: [ install-golangci-lint ]
+    cmds:
+      - '{{.GOLANGCI_LINT}} run ./... --config=.golangci.yml'
+
+  db-up:
+    desc: Start Postgres in Docker
+    cmds:
+      - docker run --name=tmball-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=qwerty -e POSTGRES_DB=tmball-db -p 5432:5432 -d --rm postgres
+      
+  goose-install:
+    desc: installing goose migrations
+    cmds:
+      - GOBIN={{.BIN_DIR}} go install github.com/pressly/goose/v3/cmd/goose@latest
+
+  migrations-generate:
+    desc: Generate new goose migration
+    deps: [ goose-install ]
+    cmds:
+      - goose -dir migrations/postgres create {{.NAME}} sql
+    requires:
+      vars: [NAME]
+
+  migrations-up:
+    desc: Apply all postgres migrations
+    dotenv: ['.env']
+    cmds:
+      - >
+        GOOSE_DBSTRING=postgres://postgres:qwerty@localhost:5432/tmball-db?sslmode=disable {{.GOOSE}} -dir migrations/postgres postgres up
+
+  run:
+      desc: Run sso service
+      dotenv: ['.env']
+      cmds:
+        - go run cmd/app/main.go
