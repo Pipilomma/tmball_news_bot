@@ -13,9 +13,14 @@ import (
 type Config struct {
 	Env             string        `env:"ENV" env-default:"local"`
 	GracefulTimeout time.Duration `env:"GRACEFUL_TIMEOUT" env-default:"10s"`
-	ParserTimeout   time.Duration `env:"PARSER_TIMEOUT" env-default:"1h"`
+	Parser          ParserConfig
 	DB              DBConfig
 	Telegram        TelegramConfig
+}
+
+type ParserConfig struct {
+	ParserTimeout time.Duration `env:"PARSER_TIMEOUT" env-default:"1h"`
+	ParserUrl     string        `env:"URL_FOR_PARSER" required:"true"`
 }
 
 type DBConfig struct {

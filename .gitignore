@@ -1,6 +1,7 @@
 .idea
 .vscode
 
+.env
 *.exe
 *.exe~
 /bin/

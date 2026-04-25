@@ -82,7 +82,7 @@ func (a *app) initDB() error {
 }
 
 func (a *app) initServices() error {
-	a.parser = parser.New()
+	a.parser = parser.New(&a.cfg.Parser)
 	a.service = service.New(a.db, a.parser)
 
 	if a.cfg.Telegram.Enabled {
@@ -105,7 +105,7 @@ func (a *app) Run() error {
 	}()
 
 	go func() {
-		a.runParserLoop(a.ctx, a.cfg.ParserTimeout)
+		a.runParserLoop(a.ctx, a.cfg.Parser.ParserTimeout)
 	}()
 
 	log.Println("Server is running...")
