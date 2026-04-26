@@ -9,6 +9,7 @@ import (
 
 	"tmballNews/internal/config"
 	"tmballNews/internal/domain"
+	"tmballNews/internal/repository/postgres/dao"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -76,37 +77,19 @@ func (r *postgres) SaveNews(ctx context.Context, news []domain.News) error {
 	return err
 }
 
-func (r *postgres) LatestNews(ctx context.Context, now time.Time) (*domain.News, error) {
-	query, args, err := r.builder.
-		Select(
-			"id",
-			"title",
-			"content",
-			"COALESCE(image_url, '') AS image_url",
-			"COALESCE(video_url, '') AS video_url",
-			"published_at",
-		).
-		From("news").
-		OrderByClause(sq.Expr("ABS(EXTRACT(EPOCH FROM (published_at - ?)))", now)).
-		Limit(1).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-
-	if err != nil {
-		return nil, errors.New("failed to get latest news")
+func (r *postgres) ListNews(ctx context.Context, filters *dao.NewsFilter) ([]domain.News, error) {
+	if filters == nil {
+		return nil, errors.New("news filters are required")
 	}
 
-	row := r.db.QueryRowContext(ctx, query, args...)
-
-	var n domain.News
-	if err := row.Scan(&n.ID, &n.Title, &n.Content, &n.ImageURL, &n.VideoURL, &n.PublishedAt); err != nil {
-		return nil, err
+	if filters.SearchMode == dao.NewsSearchOff {
+		return r.News(ctx, *filters.PublishedFrom)
 	}
 
-	return &n, nil
+	return r.FindNews(ctx, filters.Query)
 }
 
-func (r *postgres) WeekNews(ctx context.Context, fromDate time.Time) ([]domain.News, error) {
+func (r *postgres) News(ctx context.Context, fromDate time.Time) ([]domain.News, error) {
 	query, args, err := r.builder.
 		Select(
 			"id",
@@ -160,45 +143,37 @@ func (r *postgres) WeekNews(ctx context.Context, fromDate time.Time) ([]domain.N
 	return result, nil
 }
 
-func (r *postgres) NewsExists(ctx context.Context, newsID string) bool {
-	query, args, err := r.builder.
-		Select().
-		Column(sq.Expr("EXISTS (SELECT 1 FROM news WHERE id = ?)", newsID)).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-
-	if err != nil {
-		return false
-	}
-
-	var exists bool
-	err = r.db.QueryRowContext(ctx, query, args...).Scan(&exists)
-	if err != nil {
-		return false
-	}
-
-	return exists
-}
-
-func (r *postgres) FindNews(ctx context.Context, query string) (*domain.News, error) {
+func (r *postgres) FindNews(ctx context.Context, query string) ([]domain.News, error) {
 	q := strings.TrimSpace(query)
 	if q == "" {
 		return nil, nil
 	}
 
+	var res []domain.News
+
 	if news, err := r.findExact(ctx, q); err != nil {
 		return nil, err
 	} else if news != nil {
-		return news, nil
+		res = append(res, *news)
+		return res, nil
 	}
 
 	if news, err := r.findByWords(ctx, q); err != nil {
 		return nil, err
 	} else if news != nil {
-		return news, nil
+		res = append(res, *news)
+		return res, nil
 	}
 
-	return r.findFuzzy(ctx, q)
+	news, err := r.findFuzzy(ctx, q)
+	if err != nil {
+		return nil, err
+	} else if news != nil {
+		res = append(res, *news)
+		return res, nil
+	}
+
+	return res, nil
 }
 
 func (r *postgres) findExact(ctx context.Context, q string) (*domain.News, error) {

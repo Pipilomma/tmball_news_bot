@@ -118,6 +118,10 @@ func (a *API) FindNewsHandler(message *tgbotapi.Message) {
 
 	news, err := a.Service.FindNews(a.ctx, input)
 	if err != nil {
+		if errors.Is(err, errs.ErrNewsNotFound) {
+			_, _ = a.bot.Send(tgbotapi.NewMessage(chatID, unknowNewsTextTelegram))
+		}
+
 		log.Println(err)
 		return
 	}

@@ -16,6 +16,7 @@ import (
 	"tmballNews/internal/repository"
 	"tmballNews/internal/service"
 
+	"tmballNews/internal/repository/parser"
 	tmparser "tmballNews/internal/repository/parser"
 	postgres "tmballNews/internal/repository/postgres"
 )
@@ -29,7 +30,7 @@ type app struct {
 	tgAPI *tg.API
 	db    repository.Postgres
 
-	parser  repository.Parser
+	parser  parser.Parser
 	service tg.Service
 }
 
