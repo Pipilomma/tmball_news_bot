@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"time"
+
 	"tmballNews/internal/domain"
 )
 
@@ -16,4 +17,8 @@ type Postgres interface {
 	FindNews(ctx context.Context, query string) (*domain.News, error)
 	GetSubs(ctx context.Context) ([]domain.Subs, error)
 	OneByChatIDAndUsername(ctx context.Context, chatID int64, username string) (*domain.Subs, error)
+}
+
+type Parser interface {
+	GetLatestNews(ctx context.Context) ([]domain.News, error)
 }

@@ -7,39 +7,33 @@ import (
 	"log"
 	"net/http"
 	"time"
+
 	"tmballNews/internal/config"
 	"tmballNews/internal/domain"
 )
 
-var (
-	agent   = "User-Agent"
-	browser = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-)
-
-type Parser struct {
+type TmballParser struct {
 	httpClient *http.Client
-	parser     *config.ParserConfig
+	cfg        *config.ParserConfig
 }
 
-func New(cfg *config.ParserConfig) *Parser {
-	return &Parser{
+func New(cfg *config.ParserConfig) *TmballParser {
+	return &TmballParser{
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
-		parser: cfg,
+		cfg: cfg,
 	}
 }
 
-func (p *Parser) GetLatestNews(ctx context.Context) ([]domain.News, error) {
-	url := fmt.Sprintf("%s?limit=12&page=1", p.parser.ParserUrl)
+func (p *TmballParser) GetLatestNews(ctx context.Context) ([]domain.News, error) {
+	url := fmt.Sprintf("%s?limit=12&page=1", p.cfg.TmballUrl)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Println(url, err)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-
-	req.Header.Set(agent, browser)
 
 	resp, err := p.httpClient.Do(req)
 	if err != nil {

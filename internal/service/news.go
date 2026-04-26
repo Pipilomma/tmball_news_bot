@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
 	"tmballNews/internal/domain"
 	"tmballNews/internal/lib/errs"
 	"tmballNews/internal/service/dto"
 )
 
-func (s *service) LetsSeeNews(ctx context.Context, input dto.InputSubs) error {
+func (s *service) Subcribe(ctx context.Context, input dto.InputSubs) error {
 	sb, err := s.db.OneByChatIDAndUsername(ctx, input.ChatID, input.Username)
 	if sb != nil {
 		return errs.ErrUserUlreadySub

@@ -6,6 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type UserState string
+
+const (
+	StateNone                  UserState = "none"
+	StateAwaitingFindNewsInput UserState = "awaiting_find_news_input"
+)
+
 type News struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`

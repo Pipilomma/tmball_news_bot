@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"tmballNews/internal/config"
 
 	sq "github.com/Masterminds/squirrel"

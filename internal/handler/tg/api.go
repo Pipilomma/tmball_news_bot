@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 	"sync"
+
 	"tmballNews/internal/config"
 	"tmballNews/internal/domain"
-	"tmballNews/internal/entity"
 	"tmballNews/internal/service/dto"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -20,7 +20,7 @@ type Service interface {
 	LastNews(ctx context.Context) (*domain.News, error)
 	LastWeekNews(ctx context.Context) ([]domain.News, error)
 	FindNews(ctx context.Context, message string) (*domain.News, error)
-	LetsSeeNews(ctx context.Context, input dto.InputSubs) error
+	Subcribe(ctx context.Context, input dto.InputSubs) error
 	OneByChatIDAndUsername(ctx context.Context, chatID int64, username string) (*domain.Subs, error)
 }
 
@@ -31,8 +31,8 @@ type API struct {
 	Service          Service
 	commandHandlers  map[string]CommandHandler
 	callbackHandlers map[string]CallbackHandler
-	userStates       map[string]entity.UserState
-	stateHandlers    map[entity.UserState]func(*tgbotapi.Message)
+	userStates       map[string]domain.UserState
+	stateHandlers    map[domain.UserState]func(*tgbotapi.Message)
 	mu               sync.Mutex
 }
 
@@ -51,8 +51,8 @@ func NewAPI(ctx context.Context, cfg *config.TelegramConfig, service Service) *A
 		Service:          service,
 		commandHandlers:  make(map[string]CommandHandler),
 		callbackHandlers: make(map[string]CallbackHandler),
-		userStates:       make(map[string]entity.UserState),
-		stateHandlers:    make(map[entity.UserState]func(*tgbotapi.Message)),
+		userStates:       make(map[string]domain.UserState),
+		stateHandlers:    make(map[domain.UserState]func(*tgbotapi.Message)),
 		mu:               sync.Mutex{},
 	}
 
@@ -72,8 +72,8 @@ func (a *API) registerHandlers() {
 		findNewsCommand:     a.StartFindNewsHandler,
 	}
 
-	a.stateHandlers = map[entity.UserState]func(*tgbotapi.Message){
-		entity.StateAwaitingFindNewsInput: a.FindNewsHandler,
+	a.stateHandlers = map[domain.UserState]func(*tgbotapi.Message){
+		domain.StateAwaitingFindNewsInput: a.FindNewsHandler,
 	}
 }
 

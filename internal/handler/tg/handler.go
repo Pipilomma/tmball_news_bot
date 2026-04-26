@@ -5,8 +5,8 @@ import (
 	"log"
 	"regexp"
 	"strings"
+
 	"tmballNews/internal/domain"
-	"tmballNews/internal/entity"
 	"tmballNews/internal/lib/errs"
 	"tmballNews/internal/service/dto"
 
@@ -91,7 +91,7 @@ func (a *API) LastWeekNewsHandler(message *tgbotapi.Message) {
 func (a *API) SeeNewsHandler(message *tgbotapi.Message) {
 	chatID := message.Chat.ID
 
-	err := a.Service.LetsSeeNews(a.ctx, dto.InputSubs{
+	err := a.Service.Subcribe(a.ctx, dto.InputSubs{
 		ChatID:    message.Chat.ID,
 		Username:  message.Chat.UserName,
 		FirstName: message.Chat.FirstName,
@@ -139,7 +139,7 @@ func (a *API) StartFindNewsHandler(message *tgbotapi.Message) {
 	chatID := message.Chat.ID
 	userID := a.getUserID(message)
 
-	a.setUserState(userID, entity.StateAwaitingFindNewsInput)
+	a.setUserState(userID, domain.StateAwaitingFindNewsInput)
 	msg := tgbotapi.NewMessage(chatID, findNewsTextTelegram)
 	_, _ = a.bot.Send(msg)
 }

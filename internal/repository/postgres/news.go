@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
+
 	"tmballNews/internal/config"
 	"tmballNews/internal/domain"
 
@@ -205,14 +205,14 @@ func (r *postgres) SaveSubs(ctx context.Context, subs *domain.Subs) error {
 		ToSql()
 
 	if err != nil {
-		return fmt.Errorf("хуй")
+		return err
 	}
 
 	log.Println(subs.Username, subs.IsActive, subs.ChatID)
 
 	_, err = r.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		return fmt.Errorf("пизда: %w", err)
+		return err
 	}
 
 	return nil

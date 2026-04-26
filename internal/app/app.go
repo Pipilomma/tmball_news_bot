@@ -8,14 +8,16 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
 	"tmballNews/internal/config"
 	"tmballNews/internal/domain"
 	"tmballNews/internal/handler/tg"
 	"tmballNews/internal/lib/closer"
-	"tmballNews/internal/parser"
 	"tmballNews/internal/repository"
-	postgres "tmballNews/internal/repository/postgres"
 	"tmballNews/internal/service"
+
+	tmparser "tmballNews/internal/repository/parser"
+	postgres "tmballNews/internal/repository/postgres"
 )
 
 type app struct {
@@ -27,7 +29,7 @@ type app struct {
 	tgAPI *tg.API
 	db    repository.Postgres
 
-	parser  service.Parser
+	parser  repository.Parser
 	service tg.Service
 }
 
@@ -82,7 +84,7 @@ func (a *app) initDB() error {
 }
 
 func (a *app) initServices() error {
-	a.parser = parser.New(&a.cfg.Parser)
+	a.parser = tmparser.New(&a.cfg.Parser)
 	a.service = service.New(a.db, a.parser)
 
 	if a.cfg.Telegram.Enabled {
@@ -105,7 +107,7 @@ func (a *app) Run() error {
 	}()
 
 	go func() {
-		a.runParserLoop(a.ctx, a.cfg.Parser.ParserTimeout)
+		a.runParserLoop(a.ctx, a.cfg.Parser.TmballTimeout)
 	}()
 
 	log.Println("Server is running...")

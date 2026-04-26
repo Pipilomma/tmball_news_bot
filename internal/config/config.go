@@ -19,8 +19,8 @@ type Config struct {
 }
 
 type ParserConfig struct {
-	ParserTimeout time.Duration `env:"PARSER_TIMEOUT" env-default:"1h"`
-	ParserUrl     string        `env:"URL_FOR_PARSER" required:"true"`
+	TmballTimeout time.Duration `env:"TRANSFERMARKT_TIMEOUT" env-default:"1h"`
+	TmballUrl     string        `env:"TRANSFERMARKT_URL" required:"true"`
 }
 
 type DBConfig struct {
