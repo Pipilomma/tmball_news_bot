@@ -6,8 +6,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func (a *API) getInternalUserID(chatID int64, username string) (string, error) {
-	subs, err := a.Service.OneByChatIDAndUsername(a.ctx, chatID, username)
+func (a *API) getInternalUserID(chatID int64) (string, error) {
+	subs, err := a.Service.OneByChatID(a.ctx, chatID)
 	if err != nil {
 		return "", err
 	}
@@ -19,9 +19,8 @@ func (a *API) getInternalUserID(chatID int64, username string) (string, error) {
 
 func (a *API) getUserID(message *tgbotapi.Message) string {
 	chatID := message.Chat.ID
-	username := message.From.UserName
 
-	internalUserID, err := a.getInternalUserID(chatID, username)
+	internalUserID, err := a.getInternalUserID(chatID)
 	if err != nil {
 		log.Printf("Error getting internal user ID: %v", err)
 

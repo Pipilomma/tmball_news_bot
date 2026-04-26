@@ -6,6 +6,6 @@ import (
 	"tmballNews/internal/domain"
 )
 
-func (s *service) OneByChatIDAndUsername(ctx context.Context, chatID int64, username string) (*domain.Subs, error) {
-	return s.db.OneByChatIDAndUsername(ctx, chatID, username)
+func (s *service) OneByChatID(ctx context.Context, chatID int64) (*domain.Subs, error) {
+	return s.db.OneByChatID(ctx, chatID)
 }

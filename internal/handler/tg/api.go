@@ -21,7 +21,7 @@ type Service interface {
 	LastWeekNews(ctx context.Context) ([]domain.News, error)
 	FindNews(ctx context.Context, message string) (*domain.News, error)
 	Subcribe(ctx context.Context, input dto.InputSubs) error
-	OneByChatIDAndUsername(ctx context.Context, chatID int64, username string) (*domain.Subs, error)
+	OneByChatID(ctx context.Context, chatID int64) (*domain.Subs, error)
 }
 
 type API struct {

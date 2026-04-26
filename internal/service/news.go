@@ -12,7 +12,7 @@ import (
 )
 
 func (s *service) Subcribe(ctx context.Context, input dto.InputSubs) error {
-	sb, err := s.db.OneByChatIDAndUsername(ctx, input.ChatID, input.Username)
+	sb, err := s.db.OneByChatID(ctx, input.ChatID)
 	if sb != nil {
 		return errs.ErrUserUlreadySub
 	}
@@ -35,19 +35,14 @@ func (s *service) ParseTmball(ctx context.Context) ([]domain.News, []domain.Subs
 		return nil, nil, errors.New("failed to parsed news")
 	}
 
+	if len(news) == 0 {
+		return nil, nil, errors.New("zero news")
+	}
+
 	var newNews []domain.News
 
-	for _, n := range news {
-		if s.db.NewsExists(ctx, n.ID) {
-			continue
-		}
-
-		err := s.db.SaveNews(ctx, &n)
-		if err != nil {
-			return nil, nil, errors.New("failed to save news")
-		}
-
-		newNews = append(newNews, n)
+	if err := s.db.SaveNews(ctx, news); err != nil {
+		return nil, nil, errors.New("failed to save news")
 	}
 
 	subs, err := s.db.GetSubs(ctx)

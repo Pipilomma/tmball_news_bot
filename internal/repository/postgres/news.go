@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"strings"
 	"time"
 
@@ -34,10 +33,10 @@ func NewPostgres(db *sqlx.DB, cfg *config.DBConfig) *postgres {
 	}
 }
 
-func (r *postgres) SaveNews(ctx context.Context, news *domain.News) error {
+func (r *postgres) SaveNews(ctx context.Context, news []domain.News) error {
 	now := time.Now().UTC()
 
-	query, args, err := r.builder.Insert(newsTable).Columns(
+	builder := sq.Insert(newsTable).Columns(
 		"id",
 		"title",
 		"content",
@@ -48,21 +47,33 @@ func (r *postgres) SaveNews(ctx context.Context, news *domain.News) error {
 		"published_at",
 		"created_at",
 		"updated_at",
-		"saved_at").Values(
-		news.ID, news.Title, news.Content, news.AuthorID, news.Status, news.ImageURL,
-		news.VideoURL, news.PublishedAt, news.CreatedAt, now, now).
-		ToSql()
+		"saved_at").
+		PlaceholderFormat(sq.Dollar).
+		Suffix("ON CONFLICT (id) DO NOTHING")
 
+	for _, n := range news {
+		builder = builder.Values(
+			n.ID,
+			n.Title,
+			n.Content,
+			n.AuthorID,
+			n.Status,
+			n.ImageURL,
+			n.VideoURL,
+			n.PublishedAt,
+			n.CreatedAt,
+			n.UpdatedAt,
+			now,
+		)
+	}
+
+	query, args, err := builder.ToSql()
 	if err != nil {
-		return err
+		return errors.New("failed to create query for upsert news")
 	}
 
 	_, err = r.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (r *postgres) LatestNews(ctx context.Context, now time.Time) (*domain.News, error) {
@@ -188,111 +199,6 @@ func (r *postgres) FindNews(ctx context.Context, query string) (*domain.News, er
 	}
 
 	return r.findFuzzy(ctx, q)
-}
-
-func (r *postgres) SaveSubs(ctx context.Context, subs *domain.Subs) error {
-	now := time.Now().UTC()
-
-	query, args, err := r.builder.Insert(subsTable).Columns(
-		"id",
-		"chat_id",
-		"username",
-		"first_name",
-		"is_active",
-		"created_at",
-		"updated_at").Values(
-		subs.ID, subs.ChatID, subs.Username, subs.FirstName, subs.IsActive, now, now).
-		ToSql()
-
-	if err != nil {
-		return err
-	}
-
-	log.Println(subs.Username, subs.IsActive, subs.ChatID)
-
-	_, err = r.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *postgres) OneByChatIDAndUsername(ctx context.Context, chatID int64, username string) (*domain.Subs, error) {
-	query, args, err := r.builder.Select(
-		"id",
-		"chat_id",
-		"username",
-		"first_name",
-		"is_active",
-		"created_at",
-		"updated_at",
-	).From(subsTable).
-		Where(sq.Eq{
-			"chat_id": chatID, "username": username}).
-		ToSql()
-
-	if err != nil {
-		return nil, err
-	}
-
-	var res domain.Subs
-
-	if err := r.db.GetContext(ctx, &res, query, args...); err != nil {
-		return nil, err
-	}
-
-	return &res, nil
-}
-
-func (r *postgres) GetSubs(ctx context.Context) ([]domain.Subs, error) {
-	query, args, err := r.builder.
-		Select(
-			"chat_id",
-			"username",
-			"first_name",
-			"is_active",
-			"created_at",
-			"updated_at",
-		).
-		From("subscribers").
-		Where("is_active = TRUE").
-		ToSql()
-
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := r.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var result []domain.Subs
-
-	for rows.Next() {
-		var s domain.Subs
-
-		if err := rows.Scan(
-			&s.ChatID,
-			&s.Username,
-			&s.FirstName,
-			&s.IsActive,
-			&s.CreatedAt,
-			&s.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-
-		result = append(result, s)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }
 
 func (r *postgres) findExact(ctx context.Context, q string) (*domain.News, error) {
