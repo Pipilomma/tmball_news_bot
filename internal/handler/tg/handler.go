@@ -20,7 +20,6 @@ var (
 
 func (a *API) StartHandler(message *tgbotapi.Message) {
 	chatID := message.Chat.ID
-
 	text := startTextTelegram
 
 	msg := tgbotapi.NewMessage(chatID, text)
@@ -28,12 +27,18 @@ func (a *API) StartHandler(message *tgbotapi.Message) {
 }
 
 func (a *API) HelpHandler(message *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(message.Chat.ID, helpTextTelegram)
+	chatID := message.Chat.ID
+	text := helpTextTelegram
+
+	msg := tgbotapi.NewMessage(chatID, text)
 	_, _ = a.bot.Send(msg)
 }
 
 func (a *API) UnknownCommandHandler(message *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(message.Chat.ID, unknowCommandTextTelegram)
+	chatID := message.Chat.ID
+	text := unknowCommandTextTelegram
+
+	msg := tgbotapi.NewMessage(chatID, text)
 	_, _ = a.bot.Send(msg)
 }
 

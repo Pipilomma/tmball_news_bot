@@ -18,7 +18,3 @@ type Postgres interface {
 	OneByChatID(ctx context.Context, chatID int64) (*domain.Subs, error)
 	ListNews(ctx context.Context, filters *dao.NewsFilter) ([]domain.News, error)
 }
-
-type Parser interface {
-	GetLatestNews(ctx context.Context) ([]domain.News, error)
-}
